@@ -36,6 +36,24 @@ def cleanup(string):
     return string
 
 
+# Rename file
+def rename(video, root):
+    name, ext = os.path.splitext(video.filename)
+    # If video is series episode
+    if video.type == 'series':
+        new_name = '{0} S{1:02d}E{2:02d}{3}'\
+            .format(video.series, video.season, video.episode, ext)
+    # If video is movie
+    else:
+        new_name = '{0} ({1}){2}'\
+            .format(video.title, video.year, ext)
+
+    # Rename and print info
+    os.rename(os.path.join(root, video.filename), os.path.join(root, new_name))
+    print('Renamed: {0}'.format(video.filename))
+    print('to: {0}'.format(new_name).rjust(len(new_name) + 9))
+
+
 # Parse filenames
 def parse_filename(video):
     # Search series-specific expressions in filename
@@ -79,39 +97,35 @@ def parse_filename(video):
         return False
 
 
-# Iterate through files
+# Find files and send to parser
 def scan(dir):
     files = os.listdir(dir)
     for root, subs, files in os.walk(dir):
         for file in files:
-            name, ext = os.path.splitext(file)
-            video = Video(name)
+            video = Video(file)
 
+            # Rename if parsing was succesful
             if parse_filename(video) != False:
-                if video.type == 'series':
-                    new_name = '{0} S{1:02d}E{2:02d}{3}'\
-                        .format(video.series, video.season, video.episode, ext)
-                else:
-                    new_name = '{0} ({1}){2}'\
-                        .format(video.title, video.year, ext)
-
-                os.rename(os.path.join(root, file), os.path.join(root, new_name))
-                print('Renamed: {0}'.format(file))
-                print('to: {0}'.format(new_name).rjust(len(new_name) + 9))
+                rename(video, root)
+            # Show info if parsing was unsuccesful
             else:
                 print('Failed to rename: {0}'.format(file))
 
 
 # Main
 def main():
+    # Init argument parser
     parser = argparse.ArgumentParser()
+
+    # Path argument
     parser.add_argument('path',
                         nargs='?',
                         default=os.getcwd(),
                         help='Path to directory with video files to rename')
-    parser.add_argument('')
+
     args = parser.parse_args()
 
+    # Run scan with given path
     scan(args.path)
 
 

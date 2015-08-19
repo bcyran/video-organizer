@@ -35,6 +35,14 @@ def cleanup(string):
     return string
 
 
+# Check if the filename is correct
+def validate(name):
+    for regex in correct_re:
+        if re.search(regex, name, re.I) is not None:
+            return True
+    return False
+
+
 # Rename file
 def rename(video, root):
     name, ext = os.path.splitext(video.filename)
@@ -104,6 +112,12 @@ def scan(dir):
         for file in files:
             video = Video(file)
 
+            # If filename is correct skip to next file
+            name, ext = os.path.splitext(video.filename)
+            if validate(name):
+                print('Skipped: {0}'.format(video.filename))
+                continue
+
             # Rename if parsing was succesful
             if parse_filename(video):
                 new_name = rename(video, root)
@@ -111,7 +125,7 @@ def scan(dir):
                 print('to: {0}'.format(new_name).rjust(len(new_name) + 9))
             # Show info if parsing was unsuccesful
             else:
-                print('Failed to rename: {0}'.format(file))
+                print(' Failed: {0}'.format(file))
 
 
 # Main

@@ -32,7 +32,6 @@ def cleanup(string):
 
     # Remove whitespaces from left and right side of string
     string = string.strip()
-
     return string
 
 
@@ -48,10 +47,9 @@ def rename(video, root):
         new_name = '{0} ({1}){2}'\
             .format(video.title, video.year, ext)
 
-    # Rename and print info
+    # Rename and return new name
     os.rename(os.path.join(root, video.filename), os.path.join(root, new_name))
-    print('Renamed: {0}'.format(video.filename))
-    print('to: {0}'.format(new_name).rjust(len(new_name) + 9))
+    return new_name
 
 
 # Parse filenames
@@ -80,6 +78,7 @@ def parse_filename(video):
         video.series = cleanup(matches['series'])
         video.season = int(matches['season'])
         video.episode = int(matches['episode'])
+        return True
 
     # Extract movie title, year
     elif video.type == 'movie':
@@ -91,13 +90,14 @@ def parse_filename(video):
 
         video.title = cleanup(matches['title'])
         video.year = int(matches['year'])
+        return True
 
     # If there is no series-specific or movie-specific expressions in filename
     else:
         return False
 
 
-# Find files and send to parser
+# Find files, send to parser and rename
 def scan(dir):
     files = os.listdir(dir)
     for root, subs, files in os.walk(dir):
@@ -105,8 +105,10 @@ def scan(dir):
             video = Video(file)
 
             # Rename if parsing was succesful
-            if parse_filename(video) != False:
-                rename(video, root)
+            if parse_filename(video):
+                new_name = rename(video, root)
+                print('Renamed: {0}'.format(video.filename))
+                print('to: {0}'.format(new_name).rjust(len(new_name) + 9))
             # Show info if parsing was unsuccesful
             else:
                 print('Failed to rename: {0}'.format(file))

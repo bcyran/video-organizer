@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Regular expressions for series
+# Regular expressions specific for TV series
 series_re = [
     # S04E16
     '(?P<series>.*?)S(?P<season>\d{1,2})E(?P<episode>\d{1,2})',
@@ -16,11 +16,11 @@ series_re = [
 movie_re = [
     # dates (four digits starting with '19' or '20' in parenthesis)
     '(?P<title>.*?)\((?P<year>(19|20)\d{2})\)',
-    # without parenthesis
-    '(?P<title>.*?)(?P<year>(19|20)\d{2})'
+    # four digits without parenthesis between any non-digit characters
+    '(?P<title>.*?)\D(?P<year>(19|20)\d{2})\D'
 ]
 
-# Regular expressions for cleanup
+# Regular expressions to remove during parsing
 exclude_re = [
     '[\[\(\{<].*?[\]\)\}>]',
     '480p',

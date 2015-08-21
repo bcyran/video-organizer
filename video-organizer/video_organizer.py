@@ -4,6 +4,7 @@
 import os
 import re
 import argparse
+import shutil
 from config import *
 
 
@@ -42,6 +43,36 @@ def validate(name):
         if re.search(regex, name, re.I) is not None:
             return True
     return False
+
+
+# Copy file
+def copy(video, root, args):
+    s_dir = args.s_dir
+    m_dir = args.m_dir
+    path = os.path.join(root, video.filename)
+
+    # If file is series episode
+    if video.type == 'series' and s_dir:
+        season_name = 'S' + str(video.season).zfill(2)
+        new_dir = os.path.join(s_dir, video.series, season_name)
+        new_path = os.path.join(new_dir, video.new_filename)
+    # If file is movie
+    elif video.type == 'movie' and m_dir:
+        name = video.title + ' (' + str(video.year) + ')'
+        new_dir = os.path.join(m_dir, name)
+        new_path = os.path.join(new_dir, video.new_filename)
+    else:
+        return
+
+    # If new directory doesn't exist create it
+    try:
+        os.makedirs(new_dir, exist_ok=True)
+    except OSError:
+        return False
+
+    # Copy file and return new path
+    shutil.copy2(path, new_path)
+    return new_path
 
 
 # Generate new filename
@@ -156,15 +187,24 @@ def scan(dir, args):
                     print(' Failed: {0}'.format(file))
                     continue
 
-            # Rename and show info if everything is ok
-            if rename(video, root):
-                print('Renamed: {0}'.format(video.filename))
-                print('     to: {0}'.format(video.new_filename))
+            # If copying is enabled copy file
+            if (args.s_dir and video.type == 'series') or\
+               (args.m_dir and video.type == 'movie'):
+                new_path = copy(video, root, args)
+                if new_path:
+                    print('Renamed: {0}'.format(video.filename))
+                    print('     to: {0}'.format(video.new_filename))
+                    print(' Copied: {0}'.format(new_path))
+            # Rename file if copying is disabled
+            else:
+                if rename(video, root):
+                    print('Renamed: {0}'.format(video.filename))
+                    print('     to: {0}'.format(video.new_filename))
 
-                # If cache is enabled save new name
-                if cache:
-                    cache['name'] = name
-                    cache['new_name'] = os.path.splitext(video.new_filename)[0]
+            # If cache is enabled save new name
+            if cache:
+                cache['name'] = name
+                cache['new_name'] = os.path.splitext(video.new_filename)[0]
 
 
 # Main
@@ -183,6 +223,20 @@ def main():
                         action='store_true',
                         help='use this option if your filenames are repeating \
                         (e.g. subtitles)')
+    # Copy series
+    parser.add_argument('-cs',
+                        '--copy-series',
+                        dest='s_dir',
+                        metavar='directory',
+                        help='copy series episodes to given directory; when using this \
+                        option files in original directory will NOT be renamed')
+    # Copy movies
+    parser.add_argument('-cm',
+                        '--copy-movies',
+                        dest='m_dir',
+                        metavar='directory',
+                        help='copy movies to given directory; when using this \
+                        option files in original directory will NOT be renamed')
 
     args = parser.parse_args()
 

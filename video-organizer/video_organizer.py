@@ -12,6 +12,7 @@ class Video:
 
     def __init__(self, filename):
         self.filename = filename
+        self.new_filename = None
         self.type = None
         self.title = None
         self.episode = None
@@ -43,14 +44,9 @@ def validate(name):
     return False
 
 
-# Rename file
-def rename(video, root, new_name):
+# Generate new filename
+def generate_filename(video):
     ext = os.path.splitext(video.filename)[1]
-
-    # If new name is given
-    if new_name:
-        os.rename(os.path.join(root, video.filename), os.path.join(root, new_name + ext))
-        return new_name + ext
 
     # If video is series episode
     if video.type == 'series':
@@ -60,10 +56,18 @@ def rename(video, root, new_name):
     else:
         new_filename = '{0} ({1}){2}'\
             .format(video.title, video.year, ext)
+    video.new_filename = new_filename
 
-    # Rename and return new name
-    os.rename(os.path.join(root, video.filename), os.path.join(root, new_filename))
-    return new_filename
+
+# Rename file
+def rename(video, root):
+    path = os.path.join(root, video.filename)
+    new_path = os.path.join(root, video.new_filename)
+    try:
+        os.rename(path, new_path)
+    except OSError:
+        return False
+    return True
 
 
 # Parse filenames
@@ -112,42 +116,55 @@ def parse_filename(video):
 
 
 # Find files, send to parser and rename
-def scan(dir, cache):
+def scan(dir, args):
+    # Create cache if user enabled it
+    cache = False
+    if args.cache:
+        cache = {
+            'name': None,
+            'new_name': None
+        }
+
+    # Iterate through files in given directory
     files = os.listdir(dir)
     for root, subs, files in os.walk(dir):
 
-        # If cache is enabled make sure we are listing files in alphabetical order
+        # If cache is enabled sort files in alphabetical order
         if cache:
             files.sort()
 
         for file in files:
             video = Video(file)
 
-            name = os.path.splitext(video.filename)[0]
+            name, ext = os.path.splitext(video.filename)
 
-            # If filename is correct skip to next file
+            # If filename is correct, skip to next file
             if validate(name):
                 print('Skipped: {0}'.format(video.filename))
                 continue
 
-            # If current name is cached read its new_name from cache
-            new_name = False
-            if cache:
-                if cache['name'] == name:
-                    new_name = cache['new_name']
-
-            # Rename if parsing was succesful
-            if parse_filename(video):
-                new_filename = rename(video, root, new_name)
-                print('Renamed: {0}'.format(video.filename))
-                print('to: {0}'.format(new_filename).rjust(len(new_filename) + 9))
-            # Show info if parsing was unsuccesful
+            # If current name is cached
+            if cache and cache['name'] == name:
+                video.new_filename = cache['new_name'] + ext
+            # If it's not
             else:
-                print(' Failed: {0}'.format(file))
+                # If parsing was successful generate new name
+                if parse_filename(video):
+                    generate_filename(video)
+                # If not, show info and skip to next file
+                else:
+                    print(' Failed: {0}'.format(file))
+                    continue
 
-            if cache:
-                cache['name'] = name
-                cache['new_name'] = os.path.splitext(new_filename)[0]
+            # Rename and show info if everything is ok
+            if rename(video, root):
+                print('Renamed: {0}'.format(video.filename))
+                print('     to: {0}'.format(video.new_filename))
+
+                # If cache is enabled save new name
+                if cache:
+                    cache['name'] = name
+                    cache['new_name'] = os.path.splitext(video.new_filename)[0]
 
 
 # Main
@@ -166,18 +183,11 @@ def main():
                         action='store_true',
                         help='use this option if your filenames are repeating \
                         (e.g. subtitles)')
+
     args = parser.parse_args()
 
-    # Create cache if user enabled it
-    cache = False
-    if args.cache:
-        cache = {
-            'name': None,
-            'new_name': None
-        }
-
-    # Run scan with given path
-    scan(args.path, cache)
+    # Run scan in given path
+    scan(args.path, args)
 
 
 if __name__ == '__main__':

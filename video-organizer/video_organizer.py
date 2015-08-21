@@ -148,20 +148,14 @@ def parse_filename(video):
 
 # Find files, send to parser and rename
 def scan(dir, args):
-    # Create cache if user enabled it
+    # If cache is enabled this will be overwritten
     cache = False
-    if args.cache:
-        cache = {
-            'name': None,
-            'new_name': None
-        }
-
     # Iterate through files in given directory
     files = os.listdir(dir)
     for root, subs, files in os.walk(dir):
 
         # If cache is enabled sort files in alphabetical order
-        if cache:
+        if args.cache:
             files.sort()
 
         for file in files:
@@ -175,8 +169,14 @@ def scan(dir, args):
                 continue
 
             # If current name is cached
-            if cache and cache['name'] == name:
-                video.new_filename = cache['new_name'] + ext
+            if cache and os.path.splitext(cache.filename)[0] == name:
+                video.new_filename = os.path.splitext(cache.new_filename)[0] + ext
+                video.type = cache.type
+                video.title = cache.title
+                video.episode = cache.episode
+                video.season = cache.season
+                video.series = cache.series
+                video.year = cache.year
             # If it's not
             else:
                 # If parsing was successful generate new name
@@ -202,9 +202,8 @@ def scan(dir, args):
                     print('     to: {0}'.format(video.new_filename))
 
             # If cache is enabled save new name
-            if cache:
-                cache['name'] = name
-                cache['new_name'] = os.path.splitext(video.new_filename)[0]
+            if args.cache:
+                cache = video
 
 
 # Main

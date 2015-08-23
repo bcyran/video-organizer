@@ -69,8 +69,11 @@ def copy(video, root, args):
     except OSError:
         return False
 
-    # Copy file and return new path
-    shutil.copy2(path, new_path)
+    # Copy file or move if it's enabled
+    if args.move:
+        shutil.move(path, new_path)
+    else:
+        shutil.copy2(path, new_path)
     return new_path
 
 
@@ -193,7 +196,10 @@ def scan(dir, args):
                 if new_path:
                     print('Renamed: {0}'.format(video.filename))
                     print('     to: {0}'.format(video.new_filename))
-                    print(' Copied: {0}'.format(new_path))
+                    if args.move:
+                        print('  Moved: {0}'.format(new_path))
+                    else:
+                        print(' Copied: {0}'.format(new_path))
             # Rename file if copying is disabled
             else:
                 if rename(video, root):
@@ -235,6 +241,11 @@ def main():
                         metavar='directory',
                         help='copy movies to given directory; when using this \
                         option files in original directory will NOT be renamed')
+    # Move instead of copying
+    parser.add_argument('-m',
+                        '--move',
+                        action='store_true',
+                        help='move videos instead of copying')
 
     args = parser.parse_args()
 

@@ -189,6 +189,10 @@ def scan(dir, args):
                     print(' Failed: {0}'.format(file))
                     continue
 
+            # If video type is ignored skip to next file
+            if args.ignore == video.type:
+                continue
+
             # If copying is enabled copy file
             if (args.s_dir and video.type == 'series') or\
                (args.m_dir and video.type == 'movie'):
@@ -246,6 +250,11 @@ def main():
                         '--move',
                         action='store_true',
                         help='move videos instead of copying')
+    # Ignore one type of files
+    parser.add_argument('-i',
+                        '--ignore',
+                        metavar='type',
+                        help='ignore one type of videos (series/movies')
 
     args = parser.parse_args()
 

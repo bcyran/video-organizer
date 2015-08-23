@@ -20,7 +20,6 @@ class Video:
         self.season = None
         self.series = None
         self.year = None
-        self.id = None
 
 
 # Cleanup string

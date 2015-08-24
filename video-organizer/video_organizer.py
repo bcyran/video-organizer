@@ -274,12 +274,11 @@ def main():
                         nargs='?',
                         default=os.getcwd(),
                         help='path to directory with video files to rename')
-    # Cache argument
-    parser.add_argument('-c',
-                        '--cache',
-                        action='store_true',
-                        help='use this option if your filenames are repeating \
-                        (e.g. subtitles)')
+    # Ignore one type of files
+    parser.add_argument('-i',
+                        '--ignore',
+                        metavar='type',
+                        help='ignore one type of videos (series/movies')
     # Copy series
     parser.add_argument('-cs',
                         '--copy-series',
@@ -299,16 +298,17 @@ def main():
                         '--move',
                         action='store_true',
                         help='move videos instead of copying')
-    # Ignore one type of files
-    parser.add_argument('-i',
-                        '--ignore',
-                        metavar='type',
-                        help='ignore one type of videos (series/movies')
     # Count files and show summary
     parser.add_argument('-s',
                         '--stats',
                         action='store_true',
                         help='count how many files of each type you have in your library')
+    # Cache argument
+    parser.add_argument('-c',
+                        '--cache',
+                        action='store_true',
+                        help='use this option if your filenames are repeating \
+                        (e.g. subtitles)')
 
     args = parser.parse_args()
 

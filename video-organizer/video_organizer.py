@@ -51,9 +51,9 @@ class Library:
 
     def summary(self):
         print('\n')
-        print('  Series: {0}'.format(self.s_count))
-        print('Episodes: {0}'.format(self.e_count))
-        print('  Movies: {0}'.format(self.m_count))
+        print('Series:        {0}'.format(self.s_count))
+        print('Episodes:      {0}'.format(self.e_count))
+        print('Movies:        {0}'.format(self.m_count))
 
         print('\n')
         print('List of series:')
@@ -211,7 +211,7 @@ def scan(dir, args, library=None):
 
             # If filename is correct, skip to next file
             if validate(name) and not args.stats:
-                print('Skipped: {0}'.format(video.filename))
+                print('Skipped:       {0}'.format(video.filename))
                 continue
 
             # If current name is cached
@@ -230,7 +230,7 @@ def scan(dir, args, library=None):
                     generate_filename(video)
                 # If not, show info and skip to next file
                 else:
-                    print(' Failed: {0}'.format(file))
+                    print('Failed:        {0}'.format(file))
                     continue
 
             # If user enabled stats count video and skip to next file
@@ -247,17 +247,17 @@ def scan(dir, args, library=None):
                (args.m_dir and video.type == 'movie'):
                 new_path = copy(video, root, args)
                 if new_path:
-                    print('Renamed: {0}'.format(video.filename))
-                    print('     to: {0}'.format(video.new_filename))
+                    print('Renamed:       {0}'.format(video.filename))
+                    print('to:            {0}'.format(video.new_filename))
                     if args.move:
-                        print('  Moved: {0}'.format(new_path))
+                        print('Moved:         {0}'.format(new_path))
                     else:
-                        print(' Copied: {0}'.format(new_path))
+                        print('Copie:         {0}'.format(new_path))
             # Rename file if copying is disabled
             else:
                 if rename(video, root):
-                    print('Renamed: {0}'.format(video.filename))
-                    print('     to: {0}'.format(video.new_filename))
+                    print('Renamed:       {0}'.format(video.filename))
+                    print('to:            {0}'.format(video.new_filename))
 
             # If cache is enabled save new name
             if args.cache:

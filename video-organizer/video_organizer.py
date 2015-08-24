@@ -22,6 +22,50 @@ class Video:
         self.year = None
 
 
+# Library class (count how many files of each type you have in your library)
+class Library:
+
+    def __init__(self, directory):
+        self.directory = directory
+        self.series = {}
+        self.movies = []
+        self.s_count = 0    # Series
+        self.e_count = 0    # Episodes
+        self.m_count = 0    # Movies
+
+    def count(self, video):
+        if video.type == 'series':
+            if video.series not in self.series:
+                self.series[video.series] = []
+                self.series[video.series].append([video.season, video.episode])
+                self.s_count += 1
+                self.e_count += 1
+            else:
+                if (video.season, video.episode) not in self.series[video.series]:
+                    self.series[video.series].append((video.season, video.episode))
+                    self.e_count += 1
+        else:
+            if video.title not in self.movies:
+                self.movies.append(video.title)
+                self.m_count += 1
+
+    def summary(self):
+        print('\n')
+        print('  Series: {0}'.format(self.s_count))
+        print('Episodes: {0}'.format(self.e_count))
+        print('  Movies: {0}'.format(self.m_count))
+
+        print('\n')
+        print('List of series:')
+        for series in self.series:
+            print('{0} - {1} episodes'.format(series, len(self.series[series])))
+
+        print('\n')
+        print('List of movies:')
+        for movie in self.movies:
+            print(movie)
+
+
 # Cleanup string
 def cleanup(string):
     # Remove unnecessary things from series name
@@ -149,7 +193,7 @@ def parse_filename(video):
 
 
 # Find files, send to parser and rename
-def scan(dir, args):
+def scan(dir, args, library=None):
     # If cache is enabled this will be overwritten
     cache = False
     # Iterate through files in given directory
@@ -166,7 +210,7 @@ def scan(dir, args):
             name, ext = os.path.splitext(video.filename)
 
             # If filename is correct, skip to next file
-            if validate(name):
+            if validate(name) and not args.stats:
                 print('Skipped: {0}'.format(video.filename))
                 continue
 
@@ -188,6 +232,11 @@ def scan(dir, args):
                 else:
                     print(' Failed: {0}'.format(file))
                     continue
+
+            # If user enabled stats count video and skip to next file
+            if args.stats:
+                library.count(video)
+                continue
 
             # If video type is ignored skip to next file
             if args.ignore == video.type:
@@ -255,11 +304,21 @@ def main():
                         '--ignore',
                         metavar='type',
                         help='ignore one type of videos (series/movies')
+    # Count files and show summary
+    parser.add_argument('-s',
+                        '--stats',
+                        action='store_true',
+                        help='count how many files of each type you have in your library')
 
     args = parser.parse_args()
 
-    # Run scan in given path
-    scan(args.path, args)
+    if args.stats:
+        library = Library(args.path)
+        scan(args.path, args, library)
+        library.summary()
+    else:
+        # Run scan in given directory
+        scan(args.path, args)
 
 
 if __name__ == '__main__':

@@ -5,6 +5,7 @@ import os
 import re
 import argparse
 import shutil
+import sys
 from config import *
 
 
@@ -264,6 +265,12 @@ def scan(dir, args, library=None):
                 cache = video
 
 
+# Show error and stop execution
+def error(message):
+    sys.stderr.write("error: %s\n" % message)
+    sys.exit(1)
+
+
 # Main
 def main():
     # Init argument parser
@@ -271,8 +278,7 @@ def main():
 
     # Path argument
     parser.add_argument('path',
-                        nargs='?',
-                        default=os.getcwd(),
+                        nargs=1,
                         help='path to directory with video files to rename')
     # Ignore one type of files
     parser.add_argument('-i',
@@ -312,13 +318,17 @@ def main():
 
     args = parser.parse_args()
 
+    # Check if given path is valid
+    if not (os.path.exists(args.path[0]) and os.path.isdir(args.path[0])):
+        error('invalid directory')
+
     if args.stats:
-        library = Library(args.path)
-        scan(args.path, args, library)
+        library = Library(args.path[0])
+        scan(args.path[0], args, library)
         library.summary()
     else:
         # Run scan in given directory
-        scan(args.path, args)
+        scan(args.path[0], args)
 
 
 if __name__ == '__main__':
